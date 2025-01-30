@@ -129,8 +129,8 @@ Spotfire.initialize(async (mod) => {
 
             tasksRootNode.children.forEach(addTasksFromHierarchyNode);
 
-            // Take only first 10 tasks
-            return flattenedTasks.slice(0, 10);
+            // Remove the slice(0, 10) and return all tasks
+            return flattenedTasks;
 
             function addTasksFromHierarchyNode(node: DataViewHierarchyNode) {
                 flattenedTasks.push(addTask(node));
