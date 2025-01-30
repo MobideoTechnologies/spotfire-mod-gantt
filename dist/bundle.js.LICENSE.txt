@@ -1,5 +1,0 @@
-/*! @license https://github.com/onury/invert-color */
-
-//! moment.js
-
-//! moment.js locale configuration
