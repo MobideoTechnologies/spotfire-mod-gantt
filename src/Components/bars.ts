@@ -231,15 +231,82 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
                 }
                 const plannedBarWidth = plannedBarDays * unitWidth;
 
+                // Calculate actual bar positions
+                const actualDaysFromMin = dateDiffInDays(renderInfo.state.startDate, v.start);
+                const actualBarDays = dateDiffInDays(v.start, v.end);
+                const actualBarX = x + actualDaysFromMin * unitWidth;
+                const actualBarWidth = actualBarDays * unitWidth;
+
+                // Determine if there is a delay in start or end
+                const startDelay = v.start > v.plannedStart ? actualBarX - plannedBarX : 0;
+                const endDelay = v.end > v.plannedEnd ? (actualBarX + actualBarWidth) - (plannedBarX + plannedBarWidth) : 0;
+
                 // Add planned timeline box
                 bar.append("rect")
-                    .attr("x", plannedBarX + 10)  // 10px right offset
-                    .attr("y", barY + 10)         // 10px down offset
+                    .attr("x", plannedBarX)
+                    .attr("y", barY + 10)
                     .attr("width", plannedBarWidth)
                     .attr("height", config.barHeight)
-                    .style("fill", v.color)       // Use solid fill instead of stroke
-                    .style("fill-opacity", "0.3") // 70% transparency (0.3 opacity)
-                    .style("stroke", "none");     // Remove stroke
+                    .style("fill", v.color)
+                    .style("fill-opacity", "0.5")
+                    .style("stroke", v.color)
+                    .style("stroke-width", "1px");
+
+                // Add planned start date label
+                renderText(
+                    bar,
+                    plannedBarX,
+                    barY + config.barHeight + 20,  // Position below the bar
+                    getFormattedDateTime(v.plannedStart),
+                    renderInfo.styling,
+                    "start",
+                    true
+                ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);  // Smaller font
+
+                // Add planned end date label
+                renderText(
+                    bar,
+                    plannedBarX + plannedBarWidth,
+                    barY + config.barHeight + 20,  // Position below the bar
+                    getFormattedDateTime(v.plannedEnd),
+                    renderInfo.styling,
+                    "end",
+                    true
+                ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);  // Smaller font
+
+                // Add actual timeline box
+                bar.append("rect")
+                    .attr("x", actualBarX)
+                    .attr("y", barY)
+                    .attr("width", actualBarWidth)
+                    .attr("height", config.barHeight)
+                    .style("fill", color)
+                    .style("stroke", "none");
+
+                // Add red border for start delay on the actual bar
+                if (startDelay > 0) {
+                    bar.append("rect")
+                        .attr("x", plannedBarX)
+                        .attr("y", barY)
+                        .attr("width", startDelay)
+                        .attr("height", config.barHeight)
+                        .style("fill", "none")
+                        .style("stroke", "#ff0000")
+                        .style("stroke-width", "2px");
+                }
+
+                // Add red border for end delay on the actual bar
+                if (endDelay > 0) {
+                    bar.append("rect")
+                        .attr("x", plannedBarX + plannedBarWidth)
+                        .attr("y", barY)
+                        .attr("width", endDelay)
+                        .attr("height", config.barHeight)
+                        .style("fill", "none")
+                        .style("stroke", "#ff0000")
+                        .style("stroke-width", "2px");
+                }
+
             } catch (e) {
                 console.log("Error rendering planned timeline:", e);
             }
