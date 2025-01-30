@@ -46,7 +46,7 @@ Spotfire.initialize(async (mod) => {
      * It checks for valid data and will print errors in case of bad data or bad renders.
      * It calls the listener (reader) created earlier and adds itself as a callback to complete the loop.
      */
-    reader.subscribe(generalErrorHandler(mod, 200)(onChange));
+    reader.subscribe(generalErrorHandler(mod, 20000)(onChange));
 
     /**
      * The function that is part of the main read-render loop.
@@ -129,7 +129,8 @@ Spotfire.initialize(async (mod) => {
 
             tasksRootNode.children.forEach(addTasksFromHierarchyNode);
 
-            return flattenedTasks;
+            // Take only first 10 tasks
+            return flattenedTasks.slice(0, 10);
 
             function addTasksFromHierarchyNode(node: DataViewHierarchyNode) {
                 flattenedTasks.push(addTask(node));
@@ -144,6 +145,8 @@ Spotfire.initialize(async (mod) => {
 
                 let percent: number;
                 let showProgress = true;
+                let plannedStart: Date = null;
+                let plannedEnd: Date = null;
 
                 try {
                     percent =
@@ -166,6 +169,21 @@ Spotfire.initialize(async (mod) => {
                 } catch (e) {
                     percent = 1;
                     showProgress = false;
+                }
+
+                try {
+                    plannedStart = rows[0].continuous("PlannedStart").value() as Date;
+                    plannedEnd = rows[0].continuous("PlannedEnd").value() as Date;
+                    
+                    // Add validation check
+                    if (!plannedStart || !plannedEnd) {
+                        plannedStart = null;
+                        plannedEnd = null;
+                    }
+                } catch (e) {
+                    // Planned dates are optional
+                    plannedStart = null;
+                    plannedEnd = null;
                 }
 
                 let startDates = node.rows().map((r) => r.continuous("Start").value() as Date);
@@ -204,7 +222,9 @@ Spotfire.initialize(async (mod) => {
                     start: startDates[0],
                     end: endDates[0],
                     isMarked: node.rows().every((r) => r.isMarked()),
-                    color: getColor(node, tasksRootNode, !!colorAxis.parts.length, colorAxis.isCategorical)
+                    color: getColor(node, tasksRootNode, !!colorAxis.parts.length, colorAxis.isCategorical),
+                    plannedStart: plannedStart,
+                    plannedEnd: plannedEnd
                 };
             }
         }
@@ -298,6 +318,9 @@ export function generalErrorHandler<T extends (dataView: Spotfire.DataView, ...a
                  * Hard abort if row count exceeds an arbitrary selected limit
                  */
                 const rowCount = await dataView.rowCount();
+                console.log("rowCount", rowCount);
+                console.log("rowLimit", rowLimit);
+
                 if (rowCount && rowCount > rowLimit) {
                     mod.controls.errorOverlay.show(
                         `☹️ Cannot render - too many rows (rowCount: ${rowCount}, limit: ${rowLimit}) `,

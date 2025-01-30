@@ -219,6 +219,32 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
                 v.mark(e.ctrlKey);
             });
 
+        // Add planned timeline box if planned dates exist
+        if (v.plannedStart && v.plannedEnd) {
+            try {
+                const plannedDaysFromMin = dateDiffInDays(renderInfo.state.startDate, v.plannedStart);
+                let plannedBarDays = dateDiffInDays(v.plannedStart, v.plannedEnd);
+                const plannedBarX = x + plannedDaysFromMin * unitWidth;
+                
+                if (plannedBarDays === 0) {
+                    plannedBarDays = 0.5;
+                }
+                const plannedBarWidth = plannedBarDays * unitWidth;
+
+                // Add planned timeline box
+                bar.append("rect")
+                    .attr("x", plannedBarX + 10)  // 10px right offset
+                    .attr("y", barY + 10)         // 10px down offset
+                    .attr("width", plannedBarWidth)
+                    .attr("height", config.barHeight)
+                    .style("fill", v.color)       // Use solid fill instead of stroke
+                    .style("fill-opacity", "0.3") // 70% transparency (0.3 opacity)
+                    .style("stroke", "none");     // Remove stroke
+            } catch (e) {
+                console.log("Error rendering planned timeline:", e);
+            }
+        }
+
         barY += rowHeight;
     });
 

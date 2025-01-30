@@ -18,6 +18,11 @@ export function getMaxDate(a: Date, b: Date) {
 }
 
 export function dateDiffInDays(a: Date, b: Date, includeLastDay = false) {
+    if (!a || !b) {
+        console.log("Warning: Null date in dateDiffInDays", { a, b });
+        return 0;
+    }
+
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
     const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
 
