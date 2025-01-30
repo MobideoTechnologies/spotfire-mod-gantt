@@ -1,0 +1,88 @@
+name: Create Release
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+
+jobs:
+  qa-release:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Create QA release zip
+        run: |
+          zip -r ${{ github.head_ref }}-${{ github.sha }}.zip dist/*
+          echo "QA release created: ${{ github.head_ref }}-${{ github.sha }}.zip"
+
+      - name: Upload QA release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: qa-release
+          path: ${{ github.head_ref }}-${{ github.sha }}.zip
+
+  production-release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Read version from file
+        id: read_version
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Bump version
+        id: bump_version
+        run: |
+          VERSION=$(cat version.txt)
+          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF++;print}')
+          echo "New version: $NEW_VERSION"
+          echo $NEW_VERSION > version.txt
+          echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Create production release zip
+        run: |
+          zip -r release-${{ env.VERSION }}.zip dist/*
+          echo "Production release created: release-${{ env.VERSION }}.zip"
+
+      - name: Upload production release artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: production-release
+          path: release-${{ env.VERSION }}.zip
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add version.txt
+          git commit -m "Bump version to ${{ env.VERSION }}"
+          git push 
