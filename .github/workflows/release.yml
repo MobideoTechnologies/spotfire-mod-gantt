@@ -26,13 +26,18 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Update mod-manifest.json with version
+        run: |
+          VERSION=$(cat version.txt)
+          jq --arg version "$VERSION" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
+
       - name: Create QA release zip
         run: |
           zip -r ${{ github.head_ref }}-${{ github.sha }}.zip dist/*
           echo "QA release created: ${{ github.head_ref }}-${{ github.sha }}.zip"
 
       - name: Upload QA release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: qa-release
           path: ${{ github.head_ref }}-${{ github.sha }}.zip
@@ -59,6 +64,10 @@ jobs:
         id: read_version
         run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
 
+      - name: Update mod-manifest.json with version
+        run: |
+          jq --arg version "${{ env.VERSION }}" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
+
       - name: Bump version
         id: bump_version
         run: |
@@ -74,7 +83,7 @@ jobs:
           echo "Production release created: release-${{ env.VERSION }}.zip"
 
       - name: Upload production release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: production-release
           path: release-${{ env.VERSION }}.zip
