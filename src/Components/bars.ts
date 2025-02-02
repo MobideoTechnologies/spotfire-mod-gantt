@@ -263,6 +263,7 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
                     true
                 ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);  // Smaller font
 
+                
                 // Add planned end date label
                 renderText(
                     bar,
