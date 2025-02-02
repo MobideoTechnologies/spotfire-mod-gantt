@@ -42,7 +42,7 @@ jobs:
       - name: Upload QA release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip
+          name: qa-release
           path: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip
 
   production-release:
@@ -90,7 +90,7 @@ jobs:
       - name: Upload production release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip
+          name: production-release
           path: mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip
 
       - name: Create GitHub Release
