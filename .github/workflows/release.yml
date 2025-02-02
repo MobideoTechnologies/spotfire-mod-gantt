@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: qa-release
-          path: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip
+          path: mobideo-spotfire-gantt-${{ github.head_ref }}-$VERSION.zip
 
   production-release:
     if: github.event_name == 'push'
