@@ -26,24 +26,26 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Read version from file
+        id: read_version
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
       - name: Update mod-manifest.json with version
         run: |
-          VERSION=$(cat version.txt)
-          jq --arg version "$VERSION" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
+          jq --arg version "${{ env.VERSION }}" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
 
       - name: Create QA release zip
         run: |
-          VERSION=$(cat version.txt)
           cd dist
-          zip -r ../mobideo-spotfire-gantt-${{ github.head_ref }}-$VERSION.zip ./*
+          zip -r ../mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip ./*
           cd ..
-          echo "QA release created: mobideo-spotfire-gantt-${{ github.head_ref }}-$VERSION.zip"
+          echo "QA release created: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip"
 
       - name: Upload QA release artifact
         uses: actions/upload-artifact@v4
         with:
           name: qa-release
-          path: mobideo-spotfire-gantt-${{ github.head_ref }}-$VERSION.zip
+          path: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip
 
   production-release:
     if: github.event_name == 'push'
