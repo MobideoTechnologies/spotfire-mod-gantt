@@ -26,21 +26,26 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Read version from file
+        id: read_version
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
       - name: Update mod-manifest.json with version
         run: |
-          VERSION=$(cat version.txt)
-          jq --arg version "$VERSION" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
+          jq --arg version "${{ env.VERSION }}" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
 
       - name: Create QA release zip
         run: |
-          zip -r ${{ github.head_ref }}-${{ github.sha }}.zip dist/*
-          echo "QA release created: ${{ github.head_ref }}-${{ github.sha }}.zip"
+          cd dist
+          zip -r ../mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip ./*
+          cd ..
+          echo "QA release created: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip"
 
       - name: Upload QA release artifact
         uses: actions/upload-artifact@v4
         with:
           name: qa-release
-          path: ${{ github.head_ref }}-${{ github.sha }}.zip
+          path: mobideo-spotfire-gantt-${{ github.head_ref }}-${{ env.VERSION }}.zip
 
   production-release:
     if: github.event_name == 'push'
@@ -79,14 +84,34 @@ jobs:
 
       - name: Create production release zip
         run: |
-          zip -r release-${{ env.VERSION }}.zip dist/*
-          echo "Production release created: release-${{ env.VERSION }}.zip"
+          cd dist
+          zip -r ../mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip ./*
+          cd ..
+          echo "Production release created: mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip"
 
       - name: Upload production release artifact
         uses: actions/upload-artifact@v4
         with:
           name: production-release
-          path: release-${{ env.VERSION }}.zip
+          path: mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip
+          asset_name: mobideo-spotfire-gantt-main-${{ env.VERSION }}.zip
+          asset_content_type: application/zip
 
       - name: Commit version bump
         run: |
