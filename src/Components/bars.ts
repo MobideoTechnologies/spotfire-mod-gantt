@@ -237,43 +237,46 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
                 const actualBarX = x + actualDaysFromMin * unitWidth;
                 const actualBarWidth = actualBarDays * unitWidth;
 
-                // Determine if there is a delay in start or end
-                const startDelay = v.start > v.plannedStart ? actualBarX - plannedBarX : 0;
+                // Determine if there is a delay or early start
+                const startDiff = actualBarX - plannedBarX;
                 const endDelay = v.end > v.plannedEnd ? (actualBarX + actualBarWidth) - (plannedBarX + plannedBarWidth) : 0;
 
                 // Add planned timeline box
-                bar.append("rect")
+                const plannedBar = bar.append("rect")
                     .attr("x", plannedBarX)
                     .attr("y", barY + 10)
                     .attr("width", plannedBarWidth)
                     .attr("height", config.barHeight)
-                    .style("fill", v.color)
-                    .style("fill-opacity", "0.5")
-                    .style("stroke", v.color)
-                    .style("stroke-width", "1px");
+                    .style("fill", v.plannedColor || v.color)
+                    .style("stroke", v.plannedColor || v.color)
+                    .style("stroke-width", "1px")
+                    .style("cursor", "pointer")
+                    .on("click", (e) => {
+                        e.stopPropagation();
+                        showPlannedBarColorPopout(e, renderInfo).catch(console.error);
+                    });
 
                 // Add planned start date label
                 renderText(
                     bar,
                     plannedBarX,
-                    barY + config.barHeight + 20,  // Position below the bar
+                    barY + config.barHeight + 20,
                     getFormattedDateTime(v.plannedStart),
                     renderInfo.styling,
                     "start",
                     true
-                ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);  // Smaller font
+                ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);
 
-                
                 // Add planned end date label
                 renderText(
                     bar,
                     plannedBarX + plannedBarWidth,
-                    barY + config.barHeight + 20,  // Position below the bar
+                    barY + config.barHeight + 20,
                     getFormattedDateTime(v.plannedEnd),
                     renderInfo.styling,
                     "end",
                     true
-                ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);  // Smaller font
+                ).style("font-size", `${parseInt(renderInfo.styling.scales.font.fontSize.toString()) - 2}px`);
 
                 // Add actual timeline box
                 bar.append("rect")
@@ -284,19 +287,21 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
                     .style("fill", color)
                     .style("stroke", "none");
 
-                // Add red border for start delay on the actual bar
-                if (startDelay > 0) {
+                // Add red border for start exceptions (both early start and delay)
+                if (startDiff !== 0) {  // If there's any difference in start times
+                    const exceptionX = startDiff > 0 ? plannedBarX : actualBarX;  // Start from earlier X
+                    const exceptionWidth = Math.abs(startDiff);  // Width is absolute difference
                     bar.append("rect")
-                        .attr("x", plannedBarX)
+                        .attr("x", exceptionX)
                         .attr("y", barY)
-                        .attr("width", startDelay)
+                        .attr("width", exceptionWidth)
                         .attr("height", config.barHeight)
                         .style("fill", "none")
                         .style("stroke", "#ff0000")
                         .style("stroke-width", "2px");
                 }
 
-                // Add red border for end delay on the actual bar
+                // Add red border for end delay
                 if (endDelay > 0) {
                     bar.append("rect")
                         .attr("x", plannedBarX + plannedBarWidth)
@@ -361,4 +366,57 @@ function renderWarningIcon(parent: D3_SELECTION_BASE, x: number, y: number, tool
         .attr("fill", "#fab632");
     iconG.append("path").attr("d", "M-65,318h2v2h-2Z").attr("fill", "#fff");
     iconG.append("path").attr("d", "M-65,314h2v3h-2Z").attr("fill", "#fff");
+}
+
+async function showPlannedBarColorPopout(event: MouseEvent, renderInfo: RenderInfo) {
+    const { popout } = renderInfo.mod.controls;
+    const plannedBarColorProp = await renderInfo.mod.property<string>("plannedBarColor");
+    const is = (value: string) => plannedBarColorProp.value() === value;
+
+    popout.show(
+        {
+            x: event.clientX,
+            y: event.clientY,
+            autoClose: true,
+            alignment: "Bottom",
+            onChange: (e) => {
+                if (e.name === "plannedBarColor") {
+                    plannedBarColorProp.set(e.value);
+                    // Force a re-render to update the colors
+                    updateBars(renderInfo);
+                }
+            }
+        },
+        () => [
+            popout.section({
+                heading: "Planned Bar Color",
+                children: [
+                    popout.components.radioButton({
+                        name: "plannedBarColor",
+                        text: "Orange",
+                        value: "orange",
+                        checked: is("orange")
+                    }),
+                    popout.components.radioButton({
+                        name: "plannedBarColor",
+                        text: "Red",
+                        value: "red",
+                        checked: is("red")
+                    }),
+                    popout.components.radioButton({
+                        name: "plannedBarColor",
+                        text: "Green",
+                        value: "green",
+                        checked: is("green")
+                    }),
+                    popout.components.radioButton({
+                        name: "plannedBarColor",
+                        text: "Yellow",
+                        value: "yellow",
+                        checked: is("yellow")
+                    })
+                ]
+            })
+        ]
+    );
 }

@@ -18,6 +18,7 @@ export type GanttData = {
     width: number,
     heigth: number,
     color: string,
+    plannedColor: string,
     showTooltip: () => void,
     hideTooltip: () => void,
     mark: (ctrlKey: boolean) => void,

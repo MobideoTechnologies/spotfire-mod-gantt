@@ -3,7 +3,7 @@ import { createScalePopout } from "./Components/popout";
 import { messages } from "./custom-messages";
 import { GanttData, ViewMode } from "./custom-types";
 import { config } from "./global-settings";
-import { RenderState } from "./interfaces";
+import { RenderState, RenderInfo } from "./interfaces";
 import { render } from "./render";
 import { addDays, getMaxDate, getMinDate, increaseBrightness, _MS_PER_DAY } from "./utils";
 var events = require("events");
@@ -22,7 +22,8 @@ Spotfire.initialize(async (mod) => {
         mod.visualization.axis("Color"),
         mod.windowSize(),
         mod.property<boolean>("overdue"),
-        mod.property<boolean>("weekend")
+        mod.property<boolean>("weekend"),
+        mod.property<string>("plannedBarColor")
     );
 
     /**
@@ -56,13 +57,15 @@ Spotfire.initialize(async (mod) => {
      * @param {Spotfire.Size} windowSize
      * @param {ModProperty<boolean>} overdue
      * @param {ModProperty<boolean>} weekend
+     * @param {ModProperty<string>} plannedBarColor
      */
     async function onChange(
         dataView: DataView,
         colorAxis: Axis,
         windowsSize: Spotfire.Size,
         overdue: ModProperty<boolean>,
-        weekend: ModProperty<boolean>
+        weekend: ModProperty<boolean>,
+        plannedBarColor: ModProperty<string>
     ) {
         let root = await (await dataView.hierarchy("Task")).root();
         const tooltip: Tooltip = mod.controls.tooltip;
@@ -115,7 +118,27 @@ Spotfire.initialize(async (mod) => {
         config.showOverdue = overdue.value();
         config.showWeekend = weekend.value();
 
-        await render(tasks, dataView, state, minDate, maxDate, tooltip, styling, windowsSize, context.interactive);
+        const renderInfo: RenderInfo = {
+            data: tasks,
+            state,
+            styling: context.styling,
+            mod: mod,
+            tooltip: mod.controls.tooltip,
+            interactive: !context.isEditing
+        };
+
+        await render(
+            tasks,
+            dataView,
+            state,
+            state.dataStartDate,
+            state.dataEndDate,
+            mod.controls.tooltip,
+            context.styling,
+            windowsSize,
+            !context.isEditing,
+            mod
+        );
         context.signalRenderComplete();
 
         mod.controls.errorOverlay.hide("General");
@@ -223,6 +246,7 @@ Spotfire.initialize(async (mod) => {
                     end: endDates[0],
                     isMarked: node.rows().every((r) => r.isMarked()),
                     color: getColor(node, tasksRootNode, !!colorAxis.parts.length, colorAxis.isCategorical),
+                    plannedColor: plannedBarColor.value(),
                     plannedStart: plannedStart,
                     plannedEnd: plannedEnd
                 };
@@ -230,7 +254,7 @@ Spotfire.initialize(async (mod) => {
         }
     }
 
-    function getColor(node: DataViewHierarchyNode, root: DataViewHierarchyNode, hasColorExpression: boolean, isCategorical: boolean) {
+    function getColor(node: DataViewHierarchyNode, root: DataViewHierarchyNode, hasColorExpression: boolean, isCategorical: boolean, isPlanned: boolean = false) {
         let color = config.defaultBarColor;
 
         const unmarkedRows = node.rows().filter((r) => !r.isMarked());
@@ -244,17 +268,17 @@ Spotfire.initialize(async (mod) => {
 
             if (hasColorExpression) {
                 if (isCategorical) {
-                    const colorValue = node.rows()[0].categorical("Color").value()[0].key;
+                    const colorValue = node.rows()[0].categorical(isPlanned ? "PlannedBarColor" : "Color").value()[0].key;
                     const differentElements = node.rows().filter((r) => {
-                        return r.categorical("Color").value()[0].key !== colorValue;
+                        return r.categorical(isPlanned ? "PlannedBarColor" : "Color").value()[0].key !== colorValue;
                     }).length;
                     if (differentElements > 0) {
                         color = config.defaultBarColor;
                     }
                 } else {
-                    const colorValue = node.rows()[0].continuous("Color").value();
+                    const colorValue = node.rows()[0].continuous(isPlanned ? "PlannedBarColor" : "Color").value();
                     const differentElements = node.rows().filter((r) => {
-                        return r.continuous("Color").value() !== colorValue;
+                        return r.continuous(isPlanned ? "PlannedBarColor" : "Color").value() !== colorValue;
                     }).length;
                     if (differentElements > 0) {
                         color = config.defaultBarColor;
