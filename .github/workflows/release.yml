@@ -119,4 +119,5 @@ jobs:
           git config --local user.name "GitHub Action"
           git add version.txt
           git commit -m "Bump version to ${{ env.VERSION }}"
-          git push 
+          git push
+          
