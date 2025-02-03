@@ -56,9 +56,16 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # Fetch the latest changes from the PR branch
+          git fetch origin ${{ github.head_ref }}
+          # Switch to the PR branch
+          git checkout ${{ github.head_ref }}
+          # Update version.txt
+          echo "${{ env.VERSION }}" > version.txt
+          # Commit and push
           git add version.txt
           git commit -m "Bump version to ${{ env.VERSION }}"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin ${{ github.head_ref }}
 
   production-release:
     if: github.event_name == 'push'
