@@ -69,10 +69,6 @@ jobs:
         id: read_version
         run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
 
-      - name: Update mod-manifest.json with version
-        run: |
-          jq --arg version "${{ env.VERSION }}" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
-
       - name: Bump version
         id: bump_version
         run: |
@@ -81,6 +77,10 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo $NEW_VERSION > version.txt
           echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Update mod-manifest.json with new version
+        run: |
+          jq --arg version "${{ env.VERSION }}" '.version = $version' dist/mod-manifest.json > dist/mod-manifest.tmp && mv dist/mod-manifest.tmp dist/mod-manifest.json
 
       - name: Create production release zip
         run: |

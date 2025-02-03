@@ -4,7 +4,7 @@ import { renderBars, updateBars } from "./bars";
 import { renderZoomSlider } from "./zoom-slider";
 import { renderVerticalScroll, updateVerticalScroll } from "./vertical-scroll";
 import { renderTodayLine, updateTodayLine } from "./today";
-import { StylingInfo, Tooltip } from "spotfire/spotfire-api-1-2";
+import { StylingInfo, Tooltip, Mod } from "spotfire/spotfire-api-1-2";
 import { dateDiffInDays } from "../utils";
 import { config } from "../global-settings";
 import * as d3 from "d3";
@@ -19,14 +19,16 @@ export function renderGantt(
     state: RenderState,
     tooltip: Tooltip,
     styling: StylingInfo,
-    interactive: boolean
+    interactive: boolean,
+    mod: Mod
 ) {
     const renderInfo: RenderInfo = {
         data: data,
         state: state,
         tooltip: tooltip,
         styling: styling,
-        interactive: interactive
+        interactive: interactive,
+        mod: mod
     };
 
     calculateUnitWidth(state);
