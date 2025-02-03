@@ -56,7 +56,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add version.txt dist/mod-manifest.json
+          git add version.txt
           git commit -m "Bump version to ${{ env.VERSION }}"
           git push origin HEAD:${{ github.head_ref }}
 
