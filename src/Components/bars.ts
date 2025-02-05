@@ -114,11 +114,11 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
     const lang = navigator.language;
     moment.locale(lang);
 
-    const getFormattedDateTime = (dateTime: Date) =>
-        dateTime.toLocaleDateString(lang, {
-            month: "numeric",
-            day: "numeric"
-        });
+    const getFormattedDateTime = (dateTime: Date) => {
+        const day = dateTime.getDate().toString().padStart(2, '0');
+        const month = (dateTime.getMonth() + 1).toString().padStart(2, '0');
+        return `${day}.${month}`;
+    };
 
     let barY = y + (config.rowHeight - config.barHeight) / 2;
     renderInfo.data.map((v, i) => {
