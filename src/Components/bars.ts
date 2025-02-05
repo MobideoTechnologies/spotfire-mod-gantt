@@ -117,8 +117,7 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
     const getFormattedDateTime = (dateTime: Date) => {
         const day = dateTime.getUTCDate().toString().padStart(2, '0');
         const month = (dateTime.getUTCMonth() + 1).toString().padStart(2, '0');
-        console.log("DATETIME", dateTime, "FORMATTED", `${day}.${month}`);
-        return `${day}.${month}`;
+        return `${day}/${month}`;
     };
 
     let barY = y + (config.rowHeight - config.barHeight) / 2;
