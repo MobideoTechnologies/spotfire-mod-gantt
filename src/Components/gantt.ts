@@ -13,7 +13,7 @@ import { renderHeader, updateHeader } from "./header";
 import { renderDefs, updateDefs } from "./svg-defs";
 import { RenderInfo, RenderState } from "../interfaces";
 
-export function renderGantt(
+export async function renderGantt(
     parent: D3_SELECTION_SVGG,
     data: GanttData[],
     state: RenderState,
@@ -40,18 +40,28 @@ export function renderGantt(
 
     renderHeader(parent, renderInfo);
     renderDefs(parent, renderInfo);
-    renderBars(parent, renderInfo);
-    renderLabels(parent, renderInfo);
+    const ganttContainer = parent.append("g").attr("id", "GanttContainer");
+    const clipPath = ganttContainer
+        .append("clipPath")
+        .attr("id", "ChartClip")
+        .append("rect")
+        .attr("x", config.labelsWidth)
+        .attr("y", 0)
+        .attr("width", config.chartWidth)
+        .attr("height", config.svgHeight);
+
+    await renderBars(ganttContainer, renderInfo);
+    renderLabels(ganttContainer, renderInfo);
     renderVerticalScroll(parent, renderInfo);
     renderTodayLine(parent, renderInfo);
 }
 
-export function updateGantt(parent: D3_SELECTION, renderInfo: RenderInfo) {
+export async function updateGantt(parent: D3_SELECTION, renderInfo: RenderInfo) {
     calculateUnitWidth(renderInfo.state);
 
     updateHeader(renderInfo);
     updateDefs(renderInfo);
-    updateBars(renderInfo);
+    await updateBars(renderInfo);
     updateLabels(renderInfo);
     updateVerticalScroll(parent, renderInfo);
     updateTodayLine(renderInfo);
