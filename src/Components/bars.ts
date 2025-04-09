@@ -10,7 +10,7 @@ import { RenderInfo } from "../interfaces";
 import invert from "invert-color/lib/invert";
 import { Tooltip } from "spotfire/spotfire-api-1-2";
 
-export function renderBars(parent: D3_SELECTION, renderInfo: RenderInfo) {
+export async function renderBars(parent: D3_SELECTION, renderInfo: RenderInfo) {
     const y: number = config.viewModeSliderHeight + config.zoomSliderHeight + config.headerHeight;
     const barsContainer = parent.append("g").attr("id", "BarsContainer").attr("clip-path", "url(#ChartClip)");
     const grid = barsContainer.append("g").attr("id", "Grid");
@@ -23,10 +23,10 @@ export function renderBars(parent: D3_SELECTION, renderInfo: RenderInfo) {
         .attr("height", renderInfo.data.length * config.rowHeight);
 
     buildGrid(grid, renderInfo);
-    buildBars(bars, renderInfo);
+    await buildBars(bars, renderInfo);
 }
 
-export function updateBars(renderInfo: RenderInfo) {
+export async function updateBars(renderInfo: RenderInfo) {
     const barsContainer = d3.select("#BarsContainer");
     barsContainer.selectAll("*").remove();
 
@@ -34,7 +34,7 @@ export function updateBars(renderInfo: RenderInfo) {
     buildGrid(grid, renderInfo);
 
     const bars = barsContainer.append("g").attr("id", "Bars");
-    buildBars(bars, renderInfo);
+    await buildBars(bars, renderInfo);
 }
 
 function updateGrid(renderInfo: RenderInfo) {
@@ -105,7 +105,7 @@ function buildGrid(grid: D3_SELECTION_BASE, renderInfo: RenderInfo) {
         .style("stroke", renderInfo.styling.scales.line.stroke);
 }
 
-function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
+async function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
     const unitWidth = config.chartWidth / dateDiffInDays(renderInfo.state.startDate, renderInfo.state.endDate, true);
     const y: number = config.viewModeSliderHeight + config.zoomSliderHeight + config.headerHeight;
     let x = config.labelsWidth;
@@ -114,10 +114,12 @@ function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
     const lang = navigator.language;
     moment.locale(lang);
 
+    // Get date format once at the start
+    const dateFormat = await renderInfo.mod.property<string>("MobideoGanttDateFormat");
+    const format = dateFormat.value() || "MM/DD";
+
     const getFormattedDateTime = (dateTime: Date) => {
-        const day = dateTime.getUTCDate().toString().padStart(2, '0');
-        const month = (dateTime.getUTCMonth() + 1).toString().padStart(2, '0');
-        return `${day}/${month}`;
+        return moment(dateTime).format(format);
     };
 
     let barY = y + (config.rowHeight - config.barHeight) / 2;
