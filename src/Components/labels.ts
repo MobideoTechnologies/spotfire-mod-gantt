@@ -24,10 +24,10 @@ export function renderLabels(parent: D3_SELECTION, renderInfo: RenderInfo) {
 }
 
 export async function updateLabels(renderInfo: RenderInfo) {
-    const labelsContainer = d3.select("#Labels");
+    const labelsContainer = d3.select<SVGElement, unknown>("#Labels");
     labelsContainer.selectAll("*").remove();
 
-    buildLabels(labelsContainer, renderInfo);
+    buildLabels(labelsContainer as unknown as D3_SELECTION, renderInfo);
     await updateBars(renderInfo);
 }
 
