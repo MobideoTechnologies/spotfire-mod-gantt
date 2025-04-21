@@ -25,7 +25,7 @@ Spotfire.initialize(async (mod) => {
         mod.property<boolean>("overdue"),
         mod.property<boolean>("weekend"),
         mod.property<string>("plannedBarColor"),
-        mod.property<string>("dateFormat")
+        mod.property<string>("MobideoGanttDateFormat")
     );
 
     /**
