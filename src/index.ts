@@ -268,8 +268,13 @@ Spotfire.initialize(async (mod) => {
                 plannedEnd = null;
             }
 
-            let startDates = node.rows().map((r) => r.continuous("Start").value() as Date);
-            let endDates = node.rows().map((r) => r.continuous("End").value() as Date);
+            let startDates = node.rows()
+                .map((r) => r.continuous("Start").value() as Date)
+                .filter(date => date !== null && date instanceof Date);
+            let endDates = node.rows()
+                .map((r) => r.continuous("End").value() as Date)
+                .filter(date => date !== null && date instanceof Date);
+
             startDates.sort((a, b) => a.getTime() - b.getTime());
             endDates.sort((a, b) => b.getTime() - a.getTime());
 
