@@ -56,10 +56,14 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # Stash any changes to version.txt
+          git stash
           # Fetch the latest changes from the PR branch
           git fetch origin ${{ github.head_ref }}
           # Switch to the PR branch
           git checkout ${{ github.head_ref }}
+          # Restore the stashed changes
+          git stash pop
           # Update version.txt
           echo "${{ env.VERSION }}" > version.txt
           # Commit and push
