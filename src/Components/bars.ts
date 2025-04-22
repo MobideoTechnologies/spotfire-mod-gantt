@@ -289,30 +289,35 @@ async function buildBars(bars: D3_SELECTION_BASE, renderInfo: RenderInfo) {
                     .style("fill", color)
                     .style("stroke", "none");
 
-                // Add red border for start exceptions (both early start and delay)
-                if (startDiff !== 0) {  // If there's any difference in start times
-                    const exceptionX = startDiff > 0 ? plannedBarX : actualBarX;  // Start from earlier X
-                    const exceptionWidth = Math.abs(startDiff);  // Width is absolute difference
-                    bar.append("rect")
-                        .attr("x", exceptionX)
-                        .attr("y", barY)
-                        .attr("width", exceptionWidth)
-                        .attr("height", config.barHeight)
-                        .style("fill", "none")
-                        .style("stroke", "#ff0000")
-                        .style("stroke-width", "2px");
-                }
+                // Only show red borders if there is actual overlap
+                const hasOverlap = !(actualBarX + actualBarWidth < plannedBarX || plannedBarX + plannedBarWidth < actualBarX);
 
-                // Add red border for end delay
-                if (endDelay > 0) {
-                    bar.append("rect")
-                        .attr("x", plannedBarX + plannedBarWidth)
-                        .attr("y", barY)
-                        .attr("width", endDelay)
-                        .attr("height", config.barHeight)
-                        .style("fill", "none")
-                        .style("stroke", "#ff0000")
-                        .style("stroke-width", "2px");
+                if (hasOverlap) {
+                    // Add red border for start exceptions (both early start and delay)
+                    if (startDiff !== 0) {  // If there's any difference in start times
+                        const exceptionX = startDiff > 0 ? plannedBarX : actualBarX;  // Start from earlier X
+                        const exceptionWidth = Math.abs(startDiff);  // Width is absolute difference
+                        bar.append("rect")
+                            .attr("x", exceptionX)
+                            .attr("y", barY)
+                            .attr("width", exceptionWidth)
+                            .attr("height", config.barHeight)
+                            .style("fill", "none")
+                            .style("stroke", "#ff0000")
+                            .style("stroke-width", "2px");
+                    }
+
+                    // Add red border for end delay
+                    if (endDelay > 0) {
+                        bar.append("rect")
+                            .attr("x", plannedBarX + plannedBarWidth)
+                            .attr("y", barY)
+                            .attr("width", endDelay)
+                            .attr("height", config.barHeight)
+                            .style("fill", "none")
+                            .style("stroke", "#ff0000")
+                            .style("stroke-width", "2px");
+                    }
                 }
 
             } catch (e) {
