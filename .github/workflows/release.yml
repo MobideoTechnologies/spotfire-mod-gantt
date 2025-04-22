@@ -56,6 +56,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git fetch origin ${{ github.head_ref }}
           git checkout ${{ github.head_ref }}
           git add version.txt
           git commit -m "Bump version to ${{ env.VERSION }}"
