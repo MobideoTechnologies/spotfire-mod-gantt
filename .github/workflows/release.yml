@@ -56,9 +56,10 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git checkout ${{ github.head_ref }}
           git add version.txt
           git commit -m "Bump version to ${{ env.VERSION }}"
-          git push origin ${{ github.head_ref }}
+          git push --force origin ${{ github.head_ref }}
 
   production-release:
     if: github.event_name == 'push'
