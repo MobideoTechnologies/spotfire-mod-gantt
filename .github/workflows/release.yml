@@ -56,17 +56,9 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # Create a new temporary branch for the version bump
-          git checkout -b version-bump-${{ github.run_id }}
-          # Update version.txt
-          echo "${{ env.VERSION }}" > version.txt
-          # Add and commit
           git add version.txt
           git commit -m "Bump version to ${{ env.VERSION }}"
-          # Push the temporary branch
-          git push origin version-bump-${{ github.run_id }}
-          # Create a PR to merge into the target branch
-          gh pr create --base ${{ github.head_ref }} --head version-bump-${{ github.run_id }} --title "Bump version to ${{ env.VERSION }}" --body "Automated version bump"
+          git push origin ${{ github.head_ref }}
 
   production-release:
     if: github.event_name == 'push'
